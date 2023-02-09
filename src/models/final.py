@@ -62,6 +62,7 @@ class PretrainedLanguageModel(tc.nn.Module):
         outputs = dict(self.encoder(input_ids=ids, token_type_ids=segs, attention_mask=masks))
         outputs["mask"] = masks
         return outputs
+    
     def _get_embedding(self, outputs):
         if self.head == "cls":
             return outputs['hidden_states'][-1][:, 0, :].cpu()
@@ -140,14 +141,13 @@ class TwoStages(tc.nn.Module):
 ##        print(self.context @ self.context.T, self.threshold)
         self.probas = self.plm.pairwise(self.rubrics, self.rubrics, batchsize=4).mean(axis=0, keepdims=True)
 
-    def predict(self, data, labels, batchsize=4, **args):
+    def predict(self, data, batchsize=4, **args):
         with tc.no_grad():
             self.plm.eval()
             scores = self.plm.encode(data, maxlen=510, batchsize=batchsize) @ self.context[-1:].T # (bs, )
             similar = self.plm.pairwise(data, self.rubrics, batchsize=batchsize) # (bs, labels)
         assert scores.shape[0] == similar.shape[0] == len(data)
         assert similar.shape[1] == len(self.rubrics)
-        labels = tc.tensor(labels)
         condition = (scores <= self.threshold).squeeze()
         similar[condition, 0] = 1e5
         similar[~condition, 0] = -1e5
