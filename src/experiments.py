@@ -67,12 +67,12 @@ def pipeline(seed, prefix=""):
         model = TwoStages(PLMNAME, device)
         model.set_rubrics(full_data.get_rubrics())
         if shot > 1:
-            yhat = model.predict(test_data.get_responses(), test_data.get_labels())
+            yhat = model.predict(test_data.get_responses())
             rslt = evalulate(test_data.get_labels(), yhat)
             print(prefix, "Seed=%d" % seed, "Task=%d" % task, "Model=MeNSP", "Shot=0", rslt, sep="\t")
 
         model.fit(train_data.get_responses(), train_data.get_labels())
-        yhat = model.predict(test_data.get_responses(), test_data.get_labels())
+        yhat = model.predict(test_data.get_responses())
         rslt = evalulate(test_data.get_labels(), yhat)
         print(prefix, "Seed=%d" % seed, "Task=%d" % task, "Model=MeNSP", "Shot=%d" % shot, rslt, sep="\t")
 
